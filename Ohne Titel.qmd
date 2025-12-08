@@ -59,10 +59,15 @@ format:
 # 3. Load packages
 
 ```{r}
-#options(repos = c(CRAN = "https://cloud.r-project.org"))
-install.packages("simFrame", repo = "https://CRAN.R-project.org/package=simFrame")
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+install.packages("simFrame")
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("tidyr")
+install.packages("forcats")
+install.packages("effects")
+
 library(simFrame)
-library(dplyr)        # data manipulation
 library(dplyr)        # data manipulation
 library(ggplot2)      # visualization
 library(tidyr)        # data tidying
@@ -75,20 +80,11 @@ library(effects)      # effect plots
 # 4. Load data and select variables
 
 ```{r}
+data(eusilcP)
 dat = eusilcP
-str(eusilcP)    # structure
-head(eusilcP)   # first few rows
+str(eusilcP)  
+head(eusilcP)
 summary(eusilcP)
-model_int <- lm(py010n ~ gender * citizenship + hsize + age, data = dat)
-anova(model_int)
-summary(model_int)
-
-
-dat <- eusilcP %>%
-  select(py010n, gender, citizenship, hsize, age, region)
-
-str(dat)
-summary(dat)
 ```
 
 ------------------------------------------------------------------------
@@ -102,16 +98,23 @@ summary(dat)
 -   Group citizenship categories if needed
 
 ```{r}
-dat <- dat %>%
+dat <- eusilcP %>%
+  select(py010n, gender, citizenship, hsize, age, region) %>%
   filter(region %in% c("Carinthia", "Styria")) %>%
-  filter(py010n > 0)
+  filter(py010n > 0) %>%
+  na.omit()
 
-dat$hsize <- as.numeric(as.character(dat$hsize))
-dat <- na.omit(dat)
+dat$gender <- as.factor(dat$gender)
+dat$citizenship <- as.factor(dat$citizenship)
+dat$hsize <- as.factor(dat$hsize)
+
+model_int <- lm(py010n ~ gender * citizenship + hsize + age, data = dat)
+anova(model_int)
+summary(model_int)
+
 qqnorm(residuals(model_int))
 qqline(residuals(model_int))
 plot(allEffects(model_int))
-
 ```
 
 ------------------------------------------------------------------------
@@ -164,7 +167,9 @@ ggplot(dat, aes(y = age)) + geom_boxplot()
 ## 7.3 Household size (hsize)
 
 ```{r}
-ggplot(dat, aes(x = hsize)) + geom_histogram(binwidth = 1)
+ggplot(dat, aes(x = as.numeric(hsize))) +
+  geom_histogram(binwidth = 1) +
+  labs(title = "Histogram of Household Size")
 ```
 
 ```{r}
