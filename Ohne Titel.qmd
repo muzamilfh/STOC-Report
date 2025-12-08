@@ -5,13 +5,13 @@ execute:
   echo: true
 embed-resources: true
 toc: true
-format: 
-  html: 
+format:
+  html:
     code-link: true
     code-tools: true
     toc-location: right
     df-print: paged
-  pdf: 
+  pdf:
     number-sections: true
   revealjs:
     output-ext: "revealjs-PRESENTATION.html"
@@ -22,37 +22,37 @@ format:
     code-link: true
     code-tools: true
     df-print: paged
-    slide-number: true  
+    slide-number: true
 ---
 
 # 1. Introduction
 
--   The aim of this intermediate report is to explore determinants of income in South Austria.
--   We focus on data management and descriptive statistics before conducting regression modelling.
--   The response variable is net employment income (`py010n`).
--   Explanatory variables include gender, citizenship, household size, and age.
--   For the intermediate report we restrict to data management and descriptive statistics.
+- The aim of this intermediate report is to explore determinants of income in South Austria.
+- We focus on data management and descriptive statistics before conducting regression modelling.
+- The response variable is net employment income (`py010n`).
+- Explanatory variables include gender, citizenship, household size, and age.
+- For the intermediate report we restrict to data management and descriptive statistics.
 
 ------------------------------------------------------------------------
 
 # 2. Data collection and description
 
--   Source: EU-SILC (European Union Statistics on Income and Living Conditions), Austria.
--   Type of data: survey data, representative sample of private households.
--   Data format: cross-sectional microdata with social, demographic, and income information.
--   Variables used:
-    -   `py010n` — employment income (numeric)
-    -   `age` — age in years (numeric)
-    -   `hsize` — household size (categorical converted to numeric)
-    -   `gender` — male / female (categorical)
-    -   `citizenship` — grouped nationality categories (categorical)
-    -   `region` — Austrian federal region
--   Missing value handling:
-    -   Keep only positive values of income (`py010n > 0`)
-    -   Convert `hsize` to numeric
-    -   Remove observations with missing values
--   Subsetting:
-    -   Only individuals living in **Styria** and **Carinthia** (South Austria, NUTS-1 region)
+- Source: EU-SILC (European Union Statistics on Income and Living Conditions), Austria.
+- Type of data: survey data, representative sample of private households.
+- Data format: cross-sectional microdata with social, demographic, and income information.
+- Variables used:
+  - `py010n` — employment income (numeric)
+  - `age` — age in years (numeric)
+  - `hsize` — household size (categorical converted to numeric)
+  - `gender` — male / female (categorical)
+  - `citizenship` — grouped nationality categories (categorical)
+  - `region` — Austrian federal region
+- Missing value handling:
+  - Keep only positive values of income (`py010n > 0`)
+  - Convert `hsize` to numeric
+  - Remove observations with missing values
+- Subsetting:
+  - Only individuals living in **Styria** and **Carinthia** (South Austria, NUTS-1 region)
 
 ------------------------------------------------------------------------
 
@@ -68,11 +68,11 @@ install.packages("forcats")
 install.packages("effects")
 
 library(simFrame)
-library(dplyr)        # data manipulation
-library(ggplot2)      # visualization
-library(tidyr)        # data tidying
-library(forcats)      # factor management
-library(effects)      # effect plots
+library(dplyr)     # data manipulation
+library(ggplot2)   # visualization
+library(tidyr)     # data tidying
+library(forcats)   # factor management
+library(effects)   # effect plots
 ```
 
 ------------------------------------------------------------------------
@@ -82,7 +82,7 @@ library(effects)      # effect plots
 ```{r}
 data(eusilcP)
 dat = eusilcP
-str(eusilcP)  
+str(eusilcP)
 head(eusilcP)
 summary(eusilcP)
 ```
@@ -91,11 +91,11 @@ summary(eusilcP)
 
 # 5. Data preparation
 
--   Filter for South Austria regions (Styria and Carinthia)
--   Keep only positive income observations
--   Convert household size to numeric
--   Remove missing values
--   Group citizenship categories if needed
+- Filter for South Austria regions (Styria and Carinthia)
+- Keep only positive income observations
+- Convert household size to numeric
+- Remove missing values
+- Group citizenship categories if needed
 
 ```{r}
 dat <- eusilcP %>%
@@ -113,7 +113,8 @@ anova(model_int)
 summary(model_int)
 
 qqnorm(residuals(model_int))
-qqline(residuals(model_int))
+qqline(residuals(model_int), col = "#E74C3C", lwd = 2)
+
 plot(allEffects(model_int))
 ```
 
@@ -144,51 +145,92 @@ table(dat$citizenship)
 
 ```{r}
 ggplot(dat, aes(x = py010n)) +
-  geom_histogram(bins = 50) +
-  labs(title = "Histogram of employment income (py010n)")
+  geom_histogram(bins = 50, fill = "#3498DB", color = "#2C3E50", alpha = 0.8) +
+  labs(title = "Histogram of employment income (py010n)",
+       x = "Net Employment Income",
+       y = "Frequency") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
 ```{r}
 ggplot(dat, aes(y = py010n)) +
-  geom_boxplot() +
-  labs(title = "Boxplot of employment income (py010n)")
+  geom_boxplot(fill = "#3498DB", color = "#2C3E50", alpha = 0.7, outlier.color = "#E74C3C") +
+  labs(title = "Boxplot of employment income (py010n)",
+       y = "Net Employment Income") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
 ## 7.2 Age
 
 ```{r}
-ggplot(dat, aes(x = age)) + geom_histogram(bins = 30)
+ggplot(dat, aes(x = age)) +
+  geom_histogram(bins = 30, fill = "#9B59B6", color = "#2C3E50", alpha = 0.8) +
+  labs(title = "Histogram of Age",
+       x = "Age (years)",
+       y = "Frequency") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
 ```{r}
-ggplot(dat, aes(y = age)) + geom_boxplot()
+ggplot(dat, aes(y = age)) +
+  geom_boxplot(fill = "#9B59B6", color = "#2C3E50", alpha = 0.7, outlier.color = "#E74C3C") +
+  labs(title = "Boxplot of Age",
+       y = "Age (years)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
 ## 7.3 Household size (hsize)
 
 ```{r}
 ggplot(dat, aes(x = as.numeric(hsize))) +
-  geom_histogram(binwidth = 1) +
-  labs(title = "Histogram of Household Size")
+  geom_histogram(binwidth = 1, fill = "#1ABC9C", color = "#2C3E50", alpha = 0.8) +
+  labs(title = "Histogram of Household Size",
+       x = "Household Size",
+       y = "Frequency") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
 ```{r}
-ggplot(dat, aes(y = hsize)) + geom_boxplot()
+ggplot(dat, aes(y = hsize)) +
+  geom_boxplot(fill = "#1ABC9C", color = "#2C3E50", alpha = 0.7, outlier.color = "#E74C3C") +
+  labs(title = "Boxplot of Household Size",
+       y = "Household Size") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
 ## 7.4 Gender
 
 ```{r}
-ggplot(dat, aes(x = gender)) + geom_bar()
+ggplot(dat, aes(x = gender, fill = gender)) +
+  geom_bar(alpha = 0.8) +
+  scale_fill_manual(values = c("male" = "#3498DB", "female" = "#E74C3C")) +
+  labs(title = "Frequency of Gender",
+       x = "Gender",
+       y = "Count") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+        legend.position = "none")
 ```
 
 ## 7.5 Citizenship
 
 ```{r}
-ggplot(dat, aes(x = citizenship)) +
-  geom_bar() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Frequency of citizenship")
+ggplot(dat, aes(x = citizenship, fill = citizenship)) +
+  geom_bar(alpha = 0.8) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+        legend.position = "none") +
+  labs(title = "Frequency of citizenship",
+       x = "Citizenship",
+       y = "Count")
 ```
 
 ------------------------------------------------------------------------
@@ -198,36 +240,56 @@ ggplot(dat, aes(x = citizenship)) +
 ## 8.1 Gender vs income
 
 ```{r}
-ggplot(dat, aes(x = gender, y = py010n)) +
-  geom_boxplot() +
-  labs(title = "Income vs gender")
+ggplot(dat, aes(x = gender, y = py010n, fill = gender)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "#E74C3C") +
+  scale_fill_manual(values = c("male" = "#3498DB", "female" = "#E74C3C")) +
+  labs(title = "Income vs gender",
+       x = "Gender",
+       y = "Net Employment Income") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+        legend.position = "none")
 ```
 
 ## 8.2 Citizenship vs income
 
 ```{r}
-ggplot(dat, aes(x = citizenship, y = py010n)) +
-  geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(title = "Income vs citizenship")
+ggplot(dat, aes(x = citizenship, y = py010n, fill = citizenship)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "#E74C3C") +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+        legend.position = "none") +
+  labs(title = "Income vs citizenship",
+       x = "Citizenship",
+       y = "Net Employment Income")
 ```
 
 ## 8.3 Age vs income
 
 ```{r}
 ggplot(dat, aes(x = age, y = py010n)) +
-  geom_point(alpha = 0.3) +
-  geom_smooth() +
-  labs(title = "Income vs age")
+  geom_point(alpha = 0.3, color = "#9B59B6") +
+  geom_smooth(method = "loess", color = "#E74C3C", fill = "#E74C3C", alpha = 0.2) +
+  labs(title = "Income vs age",
+       x = "Age (years)",
+       y = "Net Employment Income") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
 ## 8.4 Household size vs income
 
 ```{r}
-ggplot(dat, aes(x = hsize, y = py010n)) +
-  geom_point(alpha = 0.3) +
-  geom_smooth() +
-  labs(title = "Income vs household size")
+ggplot(dat, aes(x = hsize, y = py010n, group = 1)) +
+  geom_point(alpha = 0.3, color = "#1ABC9C") +
+  geom_smooth(method = "loess", color = "#E67E22", fill = "#E67E22", alpha = 0.2) +
+  labs(title = "Income vs household size",
+       x = "Household Size",
+       y = "Net Employment Income") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
 ------------------------------------------------------------------------
@@ -238,8 +300,14 @@ ggplot(dat, aes(x = hsize, y = py010n)) +
 
 ```{r}
 ggplot(dat, aes(x = gender, y = py010n, fill = citizenship)) +
-  geom_boxplot(position = "dodge") +
-  labs(title = "Income interaction: gender × citizenship")
+  geom_boxplot(position = "dodge", alpha = 0.8) +
+  scale_fill_brewer(palette = "Set2") +
+  labs(title = "Income interaction: gender × citizenship",
+       x = "Gender",
+       y = "Net Employment Income",
+       fill = "Citizenship") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
 ## 9.2 Age × Gender
@@ -247,8 +315,14 @@ ggplot(dat, aes(x = gender, y = py010n, fill = citizenship)) +
 ```{r}
 ggplot(dat, aes(x = age, y = py010n, color = gender)) +
   geom_point(alpha = 0.3) +
-  geom_smooth() +
-  labs(title = "Income interaction: age × gender")
+  geom_smooth(method = "loess", se = TRUE, alpha = 0.2) +
+  scale_color_manual(values = c("male" = "#3498DB", "female" = "#E74C3C")) +
+  labs(title = "Income interaction: age × gender",
+       x = "Age (years)",
+       y = "Net Employment Income",
+       color = "Gender") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
 ## 9.3 Age × Citizenship
@@ -256,26 +330,44 @@ ggplot(dat, aes(x = age, y = py010n, color = gender)) +
 ```{r}
 ggplot(dat, aes(x = age, y = py010n, color = citizenship)) +
   geom_point(alpha = 0.3) +
-  geom_smooth() +
-  labs(title = "Income interaction: age × citizenship")
+  geom_smooth(method = "loess", se = TRUE, alpha = 0.2) +
+  scale_color_brewer(palette = "Set1") +
+  labs(title = "Income interaction: age × citizenship",
+       x = "Age (years)",
+       y = "Net Employment Income",
+       color = "Citizenship") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
 ## 9.4 Household Size × Gender
 
 ```{r}
-ggplot(dat, aes(x = hsize, y = py010n, color = gender)) +
+ggplot(dat, aes(x = hsize, y = py010n, color = gender, group = gender)) +
   geom_point(alpha = 0.3) +
-  geom_smooth() +
-  labs(title = "Income interaction: hsize × gender")
+  geom_smooth(method = "loess", se = TRUE, alpha = 0.2) +
+  scale_color_manual(values = c("male" = "#3498DB", "female" = "#E74C3C")) +
+  labs(title = "Income interaction: hsize × gender",
+       x = "Household Size",
+       y = "Net Employment Income",
+       color = "Gender") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
 ## 9.5 Household Size × Citizenship
 
 ```{r}
-ggplot(dat, aes(x = hsize, y = py010n, color = citizenship)) +
+ggplot(dat, aes(x = hsize, y = py010n, color = citizenship, group = citizenship)) +
   geom_point(alpha = 0.3) +
-  geom_smooth() +
-  labs(title = "Income interaction: hsize × citizenship")
+  geom_smooth(method = "loess", se = TRUE, alpha = 0.2) +
+  scale_color_brewer(palette = "Set1") +
+  labs(title = "Income interaction: hsize × citizenship",
+       x = "Household Size",
+       y = "Net Employment Income",
+       color = "Citizenship") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
 ```
 
 ------------------------------------------------------------------------
@@ -286,29 +378,37 @@ ggplot(dat, aes(x = hsize, y = py010n, color = citizenship)) +
 table(dat$gender, dat$citizenship)
 ```
 
--   If categories are too detailed, merge small ones:
+- If categories are too detailed, merge small ones:
 
 ```{r}
 dat$citizenship <- fct_lump(dat$citizenship, n = 3)
 table(dat$gender, dat$citizenship)
 ```
 
-extra ggplot(dat, aes(x = age, y = py010n)) + geom_point(alpha = 0.3) + geom_density_2d(color = "blue") + labs(title = "Income vs Age with 2D Density Contours", x = "Age", y = "Net Employment Income (py010n)")
+## Extra: 2D Density Contours
 
-extra ggplot(dat, aes(x = age, y = py010n)) + geom_point(alpha = 0.3) + geom_density_2d(color = "blue") + labs(title = "Income vs Age with 2D Density Contours", x = "Age", y = "Net Employment Income (py010n)")
+```{r}
+ggplot(dat, aes(x = age, y = py010n)) +
+  geom_point(alpha = 0.3, color = "#9B59B6") +
+  geom_density_2d(color = "#E74C3C", linewidth = 1) +
+  labs(title = "Income vs Age with 2D Density Contours",
+       x = "Age",
+       y = "Net Employment Income (py010n)") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 14))
+```
 
-Compares income distributions across citizenship groups, separately for men and women.
-
-## Highlights potential interaction between gender and citizenship.
+------------------------------------------------------------------------
 
 # 11. Summary
 
--   The income variable is highly right-skewed with outliers.
--   Men typically have higher median employment income than women.
--   Citizenship differences may indicate structural inequality in wages.
--   Age and income show a nonlinear increasing pattern.
--   Larger households do not clearly correlate with higher or lower income.
--   Some interaction effects appear visible (gender × citizenship, etc.).
+- The income variable is highly right-skewed with outliers.
+- Men typically have higher median employment income than women.
+- Citizenship differences may indicate structural inequality in wages.
+- Age and income show a nonlinear increasing pattern.
+- Larger households do not clearly correlate with higher or lower income.
+- Some interaction effects appear visible (gender × citizenship, etc.).
+- **Interaction insights:** Compares income distributions across citizenship groups, separately for men and women, highlighting potential interaction between gender and citizenship.
 
 ------------------------------------------------------------------------
 
