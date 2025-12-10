@@ -12,6 +12,9 @@ format:
     df-print: paged
   pdf: 
     number-sections: true
+    geometry: margin=1in
+    fig-pos: 'H'
+    keep-tex: false
   revealjs:
     output-ext: "revealjs-PRESENTATION.html"
     toc: false
@@ -147,7 +150,8 @@ ggplot(dat, aes(x=citizenship, fill=citizenship)) +
 **Interpretation:** The sample contains 3,004 males and 2,263 females, showing a slight male majority (57% vs 43%). For citizenship, Austrian citizens (AT) dominate the sample with 5,021 individuals (95.3%), while EU citizens (79, 1.5%) and other citizenships (167, 3.2%) are minorities. This composition reflects Austria's demographic makeup with a predominantly native population and smaller immigrant communities.
 
 ## 3.4 Bivariate Plots
-```{r}
+
+```{r bivariate-categorical, fig.height=5, fig.width=8, out.width='90%'}
 # Gender vs Income
 ggplot(dat, aes(x=gender, y=py010n, fill=gender)) + 
   geom_boxplot(alpha=0.7) + 
@@ -169,7 +173,7 @@ ggplot(dat, aes(x=citizenship, y=py010n, fill=citizenship)) +
 
 For citizenship, Austrian and EU citizens show similar income distributions with medians around €16,000-€17,000. However, individuals with "Other" citizenship status earn noticeably less, with median income approximately €13,000-€14,000. This pattern may reflect employment barriers, language challenges, or credential recognition issues faced by non-EU immigrants.
 
-```{r}
+```{r bivariate-continuous, fig.height=5, fig.width=8, out.width='90%'}
 # Age vs Income (Polynomial)
 ggplot(dat, aes(x=age, y=py010n)) +
   geom_point(alpha=0.3, color=main_color, size=1.5) + 
@@ -250,7 +254,10 @@ ggplot(dat, aes(x=hsize, y=py010n, color=citizenship)) +
 **Interpretation:** The negative relationship between household size and income appears across all citizenship groups, but with varying strengths. Austrian citizens show a moderate negative slope. EU citizens display high variability (wide confidence bands) due to small sample size, making interpretation difficult. "Other" citizenship individuals start with lower baseline income and show a similar negative trend with household size. This suggests that household size impacts earnings regardless of citizenship, though the already-disadvantaged position of non-Austrian citizens compounds this effect.
 
 ## 3.6 Correlation / Scatterplot Matrix
-```{r}
+
+```{r correlation-plots, fig.height=6, fig.width=10, out.width='95%'}
+par(mfrow=c(1,2))
+
 cor_mat <- cor(num_vars)
 corrplot(cor_mat, method="ellipse", 
          col=colorRampPalette(c("#E74C3C", "white", "#3498DB"))(200),
@@ -261,6 +268,8 @@ pairs(num_vars,
       col=alpha(main_color, 0.4),
       pch=19,
       cex=0.8)
+
+par(mfrow=c(1,1))
 ```
 
 **Interpretation:** The correlation matrix reveals weak to moderate relationships among the numeric variables. Age shows a positive but weak correlation with income (r ≈ 0.25-0.30), consistent with the inverted U-shape observed in bivariate plots—the linear correlation captures only part of this nonlinear relationship. Household size has a weak negative correlation with income (r ≈ -0.10 to -0.15), suggesting that larger households are associated with slightly lower individual earnings. Age and household size show minimal correlation (r ≈ 0.05-0.10), indicating these are relatively independent predictors.
