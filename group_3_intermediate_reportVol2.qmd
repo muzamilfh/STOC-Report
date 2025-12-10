@@ -34,18 +34,21 @@ suppressPackageStartupMessages({
   library(ggplot2)      # visualization
   library(tidyr)        # data tidying
   library(forcats)      # factor management
-  library(effects)  # effect plots
+  library(effects)      # effect plots
   library(gt)
   library(corrplot)
   library(forcats)
   library(splines)
   library(car)
-
 })
+
+# Define color palette
+main_color <- "#2C3E50"
+accent_color <- "#E74C3C"
+secondary_color <- "#3498DB"
+tertiary_color <- "#F39C12"
+quaternary_color <- "#9B59B6"
 ```
-
-
-
 
 # 1. Introduction
 This report analyzes determinants of employment income (`py010n`) in South Austria. We focus on data preparation, descriptive statistics, and regression modeling using polynomial and spline methods. Interactions between predictors are explored, and diagnostic checks are performed to validate model assumptions.
@@ -80,62 +83,142 @@ table(dat$gender, dat$citizenship)
 ## 3.3 Univariate Plots
 ```{r}
 # Income
- ggplot(dat, aes(y=py010n)) + geom_boxplot() + labs(title="Income Boxplot")
- ggplot(dat, aes(x=py010n)) + geom_histogram(bins=50) + labs(title="Income Histogram")
+ggplot(dat, aes(y=py010n)) + 
+  geom_boxplot(fill=secondary_color, alpha=0.7, color=main_color) + 
+  labs(title="Income Boxplot") +
+  theme_minimal()
+
+ggplot(dat, aes(x=py010n)) + 
+  geom_histogram(bins=50, fill=secondary_color, color=main_color, alpha=0.7) + 
+  labs(title="Income Histogram") +
+  theme_minimal()
+
 # Age
- ggplot(dat, aes(y=age)) + geom_boxplot() + labs(title="Age Boxplot")
- ggplot(dat, aes(x=age)) + geom_histogram(bins=30) + labs(title="Age Histogram")
+ggplot(dat, aes(y=age)) + 
+  geom_boxplot(fill=tertiary_color, alpha=0.7, color=main_color) + 
+  labs(title="Age Boxplot") +
+  theme_minimal()
+
+ggplot(dat, aes(x=age)) + 
+  geom_histogram(bins=30, fill=tertiary_color, color=main_color, alpha=0.7) + 
+  labs(title="Age Histogram") +
+  theme_minimal()
+
 # Household Size
- ggplot(dat, aes(y=hsize)) + geom_boxplot() + labs(title="Household Size Boxplot")
- ggplot(dat, aes(x=hsize)) + geom_histogram(binwidth=1) + labs(title="Household Size Histogram")
+ggplot(dat, aes(y=hsize)) + 
+  geom_boxplot(fill=accent_color, alpha=0.7, color=main_color) + 
+  labs(title="Household Size Boxplot") +
+  theme_minimal()
+
+ggplot(dat, aes(x=hsize)) + 
+  geom_histogram(binwidth=1, fill=accent_color, color=main_color, alpha=0.7) + 
+  labs(title="Household Size Histogram") +
+  theme_minimal()
+
 # Gender
- ggplot(dat, aes(x=gender)) + geom_bar() + labs(title="Gender Frequency")
+ggplot(dat, aes(x=gender, fill=gender)) + 
+  geom_bar(alpha=0.8) + 
+  scale_fill_manual(values=c("female"="#E74C3C", "male"="#3498DB")) +
+  labs(title="Gender Frequency") +
+  theme_minimal() +
+  theme(legend.position="none")
+
 # Citizenship
- ggplot(dat, aes(x=citizenship)) + geom_bar() +
-  theme(axis.text.x=element_text(angle=45,hjust=1)) + labs(title="Citizenship Frequency")
+ggplot(dat, aes(x=citizenship, fill=citizenship)) + 
+  geom_bar(alpha=0.8) +
+  scale_fill_brewer(palette="Set2") +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) + 
+  labs(title="Citizenship Frequency")
 ```
 
 ## 3.4 Bivariate Plots
 ```{r}
 # Gender vs Income
-ggplot(dat, aes(x=gender, y=py010n)) + geom_boxplot() + labs(title="Income vs Gender")
+ggplot(dat, aes(x=gender, y=py010n, fill=gender)) + 
+  geom_boxplot(alpha=0.7) + 
+  scale_fill_manual(values=c("female"="#E74C3C", "male"="#3498DB")) +
+  labs(title="Income vs Gender") +
+  theme_minimal() +
+  theme(legend.position="none")
+
 # Citizenship vs Income
-ggplot(dat, aes(x=citizenship, y=py010n)) +
-  geom_boxplot() + theme(axis.text.x=element_text(angle=45,hjust=1)) + labs(title="Income vs Citizenship")
+ggplot(dat, aes(x=citizenship, y=py010n, fill=citizenship)) +
+  geom_boxplot(alpha=0.7) + 
+  scale_fill_brewer(palette="Set2") +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=45, hjust=1)) + 
+  labs(title="Income vs Citizenship")
+
 # Age vs Income (Polynomial)
 ggplot(dat, aes(x=age, y=py010n)) +
-  geom_point(alpha=0.3) + geom_smooth(method="lm", formula=y~poly(x,2), color="blue") +
-  labs(title="Income vs Age (2nd-degree polynomial)")
+  geom_point(alpha=0.3, color=main_color, size=1.5) + 
+  geom_smooth(method="lm", formula=y~poly(x,2), color=tertiary_color, fill=tertiary_color, alpha=0.2, linewidth=1.2) +
+  labs(title="Income vs Age (2nd-degree polynomial)") +
+  theme_minimal()
+
 # Household size vs Income (Polynomial)
 ggplot(dat, aes(x=hsize, y=py010n)) +
-  geom_point(alpha=0.3) + geom_smooth(method="lm", formula=y~poly(x,2), color="blue") +
-  labs(title="Income vs Household Size (2nd-degree polynomial)")
+  geom_point(alpha=0.3, color=main_color, size=1.5) + 
+  geom_smooth(method="lm", formula=y~poly(x,2), color=accent_color, fill=accent_color, alpha=0.2, linewidth=1.2) +
+  labs(title="Income vs Household Size (2nd-degree polynomial)") +
+  theme_minimal()
 ```
 
 ## 3.5 Interaction Plots
 ```{r}
 # Gender × Citizenship
 ggplot(dat, aes(x=gender, y=py010n, fill=citizenship)) +
-  geom_boxplot(position="dodge") + labs(title="Income Interaction: Gender × Citizenship")
+  geom_boxplot(position="dodge", alpha=0.7) + 
+  scale_fill_brewer(palette="Set2") +
+  labs(title="Income Interaction: Gender × Citizenship") +
+  theme_minimal()
+
 # Age × Gender
-ggplot(dat, aes(x=age, y=py010n, color=gender)) + geom_point(alpha=0.3) + geom_smooth(method="lm") +
-  labs(title="Income Interaction: Age × Gender")
+ggplot(dat, aes(x=age, y=py010n, color=gender)) + 
+  geom_point(alpha=0.3, size=1.5) + 
+  geom_smooth(method="lm", se=TRUE, alpha=0.2, linewidth=1.2) +
+  scale_color_manual(values=c("female"="#E74C3C", "male"="#3498DB")) +
+  labs(title="Income Interaction: Age × Gender") +
+  theme_minimal()
+
 # Age × Citizenship
-ggplot(dat, aes(x=age, y=py010n, color=citizenship)) + geom_point(alpha=0.3) + geom_smooth(method="lm") +
-  labs(title="Income Interaction: Age × Citizenship")
+ggplot(dat, aes(x=age, y=py010n, color=citizenship)) + 
+  geom_point(alpha=0.3, size=1.5) + 
+  geom_smooth(method="lm", se=TRUE, alpha=0.2, linewidth=1.2) +
+  scale_color_brewer(palette="Set2") +
+  labs(title="Income Interaction: Age × Citizenship") +
+  theme_minimal()
+
 # Household Size × Gender
-ggplot(dat, aes(x=hsize, y=py010n, color=gender)) + geom_point(alpha=0.3) + geom_smooth(method="lm") +
-  labs(title="Income Interaction: Household Size × Gender")
+ggplot(dat, aes(x=hsize, y=py010n, color=gender)) + 
+  geom_point(alpha=0.3, size=1.5) + 
+  geom_smooth(method="lm", se=TRUE, alpha=0.2, linewidth=1.2) +
+  scale_color_manual(values=c("female"="#E74C3C", "male"="#3498DB")) +
+  labs(title="Income Interaction: Household Size × Gender") +
+  theme_minimal()
+
 # Household Size × Citizenship
-ggplot(dat, aes(x=hsize, y=py010n, color=citizenship)) + geom_point(alpha=0.3) + geom_smooth(method="lm") +
-  labs(title="Income Interaction: Household Size × Citizenship")
+ggplot(dat, aes(x=hsize, y=py010n, color=citizenship)) + 
+  geom_point(alpha=0.3, size=1.5) + 
+  geom_smooth(method="lm", se=TRUE, alpha=0.2, linewidth=1.2) +
+  scale_color_brewer(palette="Set2") +
+  labs(title="Income Interaction: Household Size × Citizenship") +
+  theme_minimal()
 ```
 
 ## 3.6 Correlation / Scatterplot Matrix
 ```{r}
 cor_mat <- cor(num_vars)
-corrplot(cor_mat, method="ellipse")
-pairs(num_vars, main="Scatterplot Matrix")
+corrplot(cor_mat, method="ellipse", 
+         col=colorRampPalette(c("#E74C3C", "white", "#3498DB"))(200),
+         tl.col="black", tl.srt=45)
+
+pairs(num_vars, 
+      main="Scatterplot Matrix",
+      col=alpha(main_color, 0.4),
+      pch=19,
+      cex=0.8)
 ```
 
 # 4. Regression Modeling
@@ -146,6 +229,7 @@ summary(lm_model)
 Anova(lm_model)
 plot(allEffects(lm_model))
 ```
+
 ## 4.2 Polynomial Model
 ```{r}
 poly_model <- lm(py010n ~ gender + citizenship + poly(age,2) + poly(hsize,2), data=dat)
@@ -153,6 +237,7 @@ summary(poly_model)
 Anova(poly_model)
 plot(allEffects(poly_model))
 ```
+
 ## 4.3 Spline Model
 ```{r}
 spline_model <- lm(py010n ~ gender + citizenship + ns(age, df=3) + ns(hsize, df=3), data=dat)
@@ -160,6 +245,7 @@ summary(spline_model)
 Anova(spline_model)
 plot(allEffects(spline_model, xlevels=50))
 ```
+
 ## 4.4 Interaction Model
 ```{r}
 int_model <- lm(py010n ~ (gender + citizenship + ns(age,3) + ns(hsize,3))^2, data=dat)
