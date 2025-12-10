@@ -251,7 +251,30 @@ plot(allEffects(spline_model, xlevels=50))
 int_model <- lm(py010n ~ (gender + citizenship + ns(age,3) + ns(hsize,3))^2, data=dat)
 summary(int_model)
 Anova(int_model)
-plot(allEffects(int_model, xlevels=50))
+
+# Plot main effects separately for clarity
+plot(Effect("age", int_model, xlevels=50), 
+     main="Effect of Age on Income",
+     lines=list(col=tertiary_color, lwd=2))
+
+plot(Effect("hsize", int_model, xlevels=50), 
+     main="Effect of Household Size on Income",
+     lines=list(col=accent_color, lwd=2))
+
+plot(Effect("gender", int_model), 
+     main="Effect of Gender on Income")
+
+plot(Effect("citizenship", int_model), 
+     main="Effect of Citizenship on Income")
+
+# Plot key interactions
+plot(Effect(c("age", "gender"), int_model, xlevels=50), 
+     main="Age × Gender Interaction",
+     lines=list(multiline=TRUE))
+
+plot(Effect(c("hsize", "gender"), int_model, xlevels=50), 
+     main="Household Size × Gender Interaction",
+     lines=list(multiline=TRUE))
 ```
 
 # 5. Summary
