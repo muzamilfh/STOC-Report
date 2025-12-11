@@ -12,6 +12,9 @@ format:
     df-print: paged
   pdf: 
     number-sections: true
+    geometry: margin=1in
+    fig-pos: 'H'
+    keep-tex: false
   revealjs:
     output-ext: "revealjs-PRESENTATION.html"
     toc: false
@@ -92,7 +95,11 @@ ggplot(dat, aes(x=py010n)) +
   geom_histogram(bins=50, fill=secondary_color, color=main_color, alpha=0.7) + 
   labs(title="Income Histogram") +
   theme_minimal()
+```
 
+**Interpretation:** The income distribution shows strong right skewness with a median around €16,226 and mean of €16,952, indicating that most individuals earn below the mean. The boxplot reveals numerous high-income outliers extending up to approximately €118,000. The histogram confirms the concentration of incomes in the lower range (€0-€30,000) with a long tail of higher earners. This skewed distribution is typical for income data and suggests the presence of income inequality in the sample.
+
+```{r}
 # Age
 ggplot(dat, aes(y=age)) + 
   geom_boxplot(fill=tertiary_color, alpha=0.7, color=main_color) + 
@@ -103,7 +110,11 @@ ggplot(dat, aes(x=age)) +
   geom_histogram(bins=30, fill=tertiary_color, color=main_color, alpha=0.7) + 
   labs(title="Age Histogram") +
   theme_minimal()
+```
 
+**Interpretation:** Age distribution is relatively uniform across the working-age population, with a median of 40 years and mean of 39.73 years. The range spans from 16 to 97 years, covering young workers to retirees. The histogram shows fairly even distribution across age groups with slight concentrations in the 25-50 age range, representing prime working years. The symmetric distribution suggests good representation across different career stages in the sample.
+
+```{r}
 # Household Size
 ggplot(dat, aes(y=hsize)) + 
   geom_boxplot(fill=accent_color, alpha=0.7, color=main_color) + 
@@ -114,7 +125,11 @@ ggplot(dat, aes(x=hsize)) +
   geom_histogram(binwidth=1, fill=accent_color, color=main_color, alpha=0.7) + 
   labs(title="Household Size Histogram") +
   theme_minimal()
+```
 
+**Interpretation:** Household size shows a right-skewed distribution with median of 3 and mean of 3.19 members. Most households contain 2-4 members, with decreasing frequency as household size increases. The boxplot indicates some larger households (up to 9 members) as outliers. This distribution reflects typical family structures in Austria, with small to medium-sized households being most common.
+
+```{r}
 # Gender
 ggplot(dat, aes(x=gender, fill=gender)) + 
   geom_bar(alpha=0.8) + 
@@ -132,8 +147,11 @@ ggplot(dat, aes(x=citizenship, fill=citizenship)) +
   labs(title="Citizenship Frequency")
 ```
 
+**Interpretation:** The sample contains 3,004 males and 2,263 females, showing a slight male majority (57% vs 43%). For citizenship, Austrian citizens (AT) dominate the sample with 5,021 individuals (95.3%), while EU citizens (79, 1.5%) and other citizenships (167, 3.2%) are minorities. This composition reflects Austria's demographic makeup with a predominantly native population and smaller immigrant communities.
+
 ## 3.4 Bivariate Plots
-```{r}
+
+```{r bivariate-categorical, fig.height=5, fig.width=8, out.width='90%'}
 # Gender vs Income
 ggplot(dat, aes(x=gender, y=py010n, fill=gender)) + 
   geom_boxplot(alpha=0.7) + 
@@ -149,7 +167,13 @@ ggplot(dat, aes(x=citizenship, y=py010n, fill=citizenship)) +
   theme_minimal() +
   theme(axis.text.x=element_text(angle=45, hjust=1)) + 
   labs(title="Income vs Citizenship")
+```
 
+**Interpretation:** A substantial gender pay gap is evident, with males earning considerably more than females on average. Male median income appears around €18,000-€20,000 while female median is approximately €12,000-€14,000, suggesting roughly 30-40% lower earnings for women. Both groups show similar dispersion and outliers, but the entire female distribution is shifted downward.
+
+For citizenship, Austrian and EU citizens show similar income distributions with medians around €16,000-€17,000. However, individuals with "Other" citizenship status earn noticeably less, with median income approximately €13,000-€14,000. This pattern may reflect employment barriers, language challenges, or credential recognition issues faced by non-EU immigrants.
+
+```{r bivariate-continuous, fig.height=5, fig.width=8, out.width='90%'}
 # Age vs Income (Polynomial)
 ggplot(dat, aes(x=age, y=py010n)) +
   geom_point(alpha=0.3, color=main_color, size=1.5) + 
@@ -165,6 +189,10 @@ ggplot(dat, aes(x=hsize, y=py010n)) +
   theme_minimal()
 ```
 
+**Interpretation:** The age-income relationship exhibits a clear inverted U-shape (quadratic pattern). Income rises steadily from young workers (age 20-25) to peak around ages 45-55, then declines for older workers approaching retirement. This reflects typical career earnings trajectories: entry-level positions transitioning to peak earning years, followed by part-time work or reduced hours before retirement. The polynomial fit captures this life-cycle pattern better than a simple linear relationship.
+
+Household size shows a negative relationship with income, with the polynomial curve declining as household size increases. Individuals in smaller households (1-3 members) tend to have higher incomes, while those in larger households (5+ members) earn less on average. This inverse relationship might reflect that larger families have more dependents per earner, or that high earners choose smaller family sizes. The slight curvature suggests the decline is steeper for very large households.
+
 ## 3.5 Interaction Plots
 ```{r}
 # Gender × Citizenship
@@ -173,7 +201,11 @@ ggplot(dat, aes(x=gender, y=py010n, fill=citizenship)) +
   scale_fill_brewer(palette="Set2") +
   labs(title="Income Interaction: Gender × Citizenship") +
   theme_minimal()
+```
 
+**Interpretation:** The gender pay gap persists across all citizenship categories. For Austrian citizens, males earn substantially more than females. This gap appears similar for EU citizens, though the smaller sample size makes comparison less reliable. Interestingly, for "Other" citizenship, both males and females earn less than their Austrian counterparts, but the gender gap remains. This suggests that citizenship status and gender have independent negative effects on income, with no strong evidence of interaction between these factors.
+
+```{r}
 # Age × Gender
 ggplot(dat, aes(x=age, y=py010n, color=gender)) + 
   geom_point(alpha=0.3, size=1.5) + 
@@ -181,7 +213,11 @@ ggplot(dat, aes(x=age, y=py010n, color=gender)) +
   scale_color_manual(values=c("female"="#E74C3C", "male"="#3498DB")) +
   labs(title="Income Interaction: Age × Gender") +
   theme_minimal()
+```
 
+**Interpretation:** Both males and females show positive age-income relationships, but with different slopes. Male income increases more steeply with age compared to females, indicating that the gender pay gap widens over the career lifecycle. Young males and females (ages 20-30) have more similar earnings, but by age 50-60, the gap has substantially widened. This pattern suggests cumulative disadvantages for women over their careers, possibly due to career interruptions, glass ceiling effects, or occupational segregation becoming more pronounced with age.
+
+```{r}
 # Age × Citizenship
 ggplot(dat, aes(x=age, y=py010n, color=citizenship)) + 
   geom_point(alpha=0.3, size=1.5) + 
@@ -189,7 +225,11 @@ ggplot(dat, aes(x=age, y=py010n, color=citizenship)) +
   scale_color_brewer(palette="Set2") +
   labs(title="Income Interaction: Age × Citizenship") +
   theme_minimal()
+```
 
+**Interpretation:** The age-income profile differs notably across citizenship groups. Austrian citizens show a strong positive relationship between age and income, reflecting normal career progression. EU citizens display a similar but slightly flatter trajectory. However, individuals with "Other" citizenship show a much weaker or even flat age-income relationship, suggesting they may face barriers to career advancement regardless of experience. This could indicate difficulties in credential recognition, discrimination, or concentration in jobs with limited advancement opportunities.
+
+```{r}
 # Household Size × Gender
 ggplot(dat, aes(x=hsize, y=py010n, color=gender)) + 
   geom_point(alpha=0.3, size=1.5) + 
@@ -197,7 +237,11 @@ ggplot(dat, aes(x=hsize, y=py010n, color=gender)) +
   scale_color_manual(values=c("female"="#E74C3C", "male"="#3498DB")) +
   labs(title="Income Interaction: Household Size × Gender") +
   theme_minimal()
+```
 
+**Interpretation:** Both genders show negative relationships between household size and income, but the pattern differs. For males, income remains relatively stable or decreases only slightly with household size. For females, there's a steeper negative slope, indicating that women in larger households earn substantially less. This interaction suggests that household responsibilities (likely childcare) disproportionately affect women's earnings, with the penalty increasing as household size grows. This reflects traditional gender roles where women may reduce work hours or career investment when household/family demands increase.
+
+```{r}
 # Household Size × Citizenship
 ggplot(dat, aes(x=hsize, y=py010n, color=citizenship)) + 
   geom_point(alpha=0.3, size=1.5) + 
@@ -207,8 +251,13 @@ ggplot(dat, aes(x=hsize, y=py010n, color=citizenship)) +
   theme_minimal()
 ```
 
+**Interpretation:** The negative relationship between household size and income appears across all citizenship groups, but with varying strengths. Austrian citizens show a moderate negative slope. EU citizens display high variability (wide confidence bands) due to small sample size, making interpretation difficult. "Other" citizenship individuals start with lower baseline income and show a similar negative trend with household size. This suggests that household size impacts earnings regardless of citizenship, though the already-disadvantaged position of non-Austrian citizens compounds this effect.
+
 ## 3.6 Correlation / Scatterplot Matrix
-```{r}
+
+```{r correlation-plots, fig.height=6, fig.width=10, out.width='95%'}
+par(mfrow=c(1,2))
+
 cor_mat <- cor(num_vars)
 corrplot(cor_mat, method="ellipse", 
          col=colorRampPalette(c("#E74C3C", "white", "#3498DB"))(200),
@@ -219,7 +268,13 @@ pairs(num_vars,
       col=alpha(main_color, 0.4),
       pch=19,
       cex=0.8)
+
+par(mfrow=c(1,1))
 ```
+
+**Interpretation:** The correlation matrix reveals weak to moderate relationships among the numeric variables. Age shows a positive but weak correlation with income (r ≈ 0.25-0.30), consistent with the inverted U-shape observed in bivariate plots—the linear correlation captures only part of this nonlinear relationship. Household size has a weak negative correlation with income (r ≈ -0.10 to -0.15), suggesting that larger households are associated with slightly lower individual earnings. Age and household size show minimal correlation (r ≈ 0.05-0.10), indicating these are relatively independent predictors.
+
+The scatterplot matrix confirms these patterns visually. The age-income plot shows substantial scatter with a slight upward trend, indicating age explains only a small portion of income variance. The household size-income plot displays a cloud of points with a gentle downward slope. The age-household size relationship appears nearly random, with no clear pattern. Overall, these correlations suggest that while age and household size are statistically significant predictors, much of the income variation remains unexplained by these numeric variables alone, highlighting the importance of categorical variables (gender, citizenship) and interaction effects in the full regression models.
 
 # 4. Regression Modeling
 ## 4.1 Linear Model
@@ -230,6 +285,16 @@ Anova(lm_model)
 plot(allEffects(lm_model))
 ```
 
+**Interpretation:** The linear model explains 17.5% of income variance (R² = 0.175). All predictors except EU citizenship are statistically significant. 
+
+**Key Findings:**
+- **Gender:** Females earn €7,689 less than males on average, holding other variables constant (p < 0.001). This represents approximately a 40-45% pay gap, the strongest predictor in the model.
+- **Citizenship:** Individuals with "Other" citizenship earn €4,813 less than Austrian citizens (p < 0.001), while EU citizens show no significant difference (p = 0.15).
+- **Household Size:** Each additional household member is associated with €441 lower income (p < 0.001), consistent with increased family responsibilities.
+- **Age:** Each additional year of age increases income by €133 (p < 0.001), reflecting experience and career progression.
+
+**Effect Plots:** The plots show gender's large impact (vertical separation), citizenship differences (mainly for "Other"), the linear increase with age, and the modest negative household size effect. However, the linear age specification may not capture the inverted U-shape observed in exploratory analysis, motivating the polynomial models.
+
 ## 4.2 Polynomial Model
 ```{r}
 poly_model <- lm(py010n ~ gender + citizenship + poly(age,2) + poly(hsize,2), data=dat)
@@ -238,6 +303,16 @@ Anova(poly_model)
 plot(allEffects(poly_model))
 ```
 
+**Interpretation:** The polynomial model improves fit to R² = 0.199 (vs. 0.175 for linear), capturing nonlinear relationships in age and household size. The ANOVA shows both polynomial terms for age are highly significant (p < 0.001), confirming the inverted U-shape.
+
+**Key Findings:**
+- **Gender:** Effect remains substantial at €7,550 (p < 0.001), nearly unchanged from the linear model.
+- **Citizenship:** "Other" citizenship penalty increases to €5,085 (p < 0.001). EU citizenship remains non-significant.
+- **Age (Quadratic):** Both linear (positive) and quadratic (negative) terms are significant, confirming income rises then falls with age. The peak occurs around ages 45-50.
+- **Household Size (Quadratic):** The linear term is significant (p < 0.001) but quadratic term is not (p = 0.608), suggesting the relationship is primarily linear negative.
+
+**Effect Plots:** The age plot now shows the characteristic inverted U-curve, peaking in mid-career. The household size plot displays a slight curve but is nearly linear. Gender and citizenship effects remain similar to the linear model. This specification better captures life-cycle earnings patterns while maintaining simplicity.
+
 ## 4.3 Spline Model
 ```{r}
 spline_model <- lm(py010n ~ gender + citizenship + ns(age, df=3) + ns(hsize, df=3), data=dat)
@@ -245,6 +320,16 @@ summary(spline_model)
 Anova(spline_model)
 plot(allEffects(spline_model, xlevels=50))
 ```
+
+**Interpretation:** The spline model (R² = 0.200) provides similar fit to the polynomial model but with greater flexibility through piecewise cubic polynomials. Using 3 degrees of freedom for age and household size allows the relationship to change shape at different points.
+
+**Key Findings:**
+- **Gender:** Effect is €7,572 (p < 0.001), consistent across all models.
+- **Citizenship:** "Other" citizenship penalty increases slightly to €5,167 (p < 0.001). EU remains non-significant.
+- **Age Splines:** All three spline basis functions show the age-income relationship varies across the age range. Two terms are highly significant (p < 0.001), one is not (p = 0.387), suggesting different income growth rates in early career vs. mid-career vs. late career.
+- **Household Size Splines:** All three terms are significant (p < 0.01), indicating the relationship between household size and income may have multiple inflection points.
+
+**Effect Plots:** The age plot shows a smoother inverted U-curve than the polynomial, with steeper increase in early career and more gradual decline post-peak. The household size plot reveals more nuanced changes, with steeper decline for very small and very large households. The spline approach captures local variations the polynomial might miss, providing a more flexible representation of nonlinear effects.
 
 ## 4.4 Interaction Model
 ```{r}
@@ -277,5 +362,52 @@ plot(Effect(c("hsize", "gender"), int_model, xlevels=50),
      lines=list(multiline=TRUE))
 ```
 
+**Interpretation:** The interaction model (R² = 0.215) provides the best fit, adding 1.5 percentage points over the spline model by allowing predictor effects to vary across groups. The model includes all two-way interactions between gender, citizenship, age splines, and household size splines.
+
+**Main Effects:**
+- **Gender:** The baseline effect is €3,695 (p < 0.01), but this is modified by interactions.
+- **Citizenship:** Base effects are non-significant as interactions dominate.
+- **Age & Household Size:** Spline terms remain significant (p < 0.001 for age), with effects varying by gender and citizenship.
+
+**Significant Interactions (from ANOVA):**
+- **Gender × Age (p < 0.001):** The age-income profile differs substantially by gender. The effect plots show males have steeper income growth with age, with the gender gap widening from youth to mid-career.
+- **Gender × Household Size (p = 0.075, marginally significant):** The negative household size effect is stronger for females than males, suggesting women bear greater career penalties for larger families.
+- **Citizenship × Age (p = 0.031):** Age-income trajectories differ by citizenship, with "Other" citizenship showing flatter profiles.
+- **Citizenship × Household Size (p = 0.016):** Household size effects vary by citizenship group.
+
+**Effect Plot Interpretations:**
+
+*Age × Gender:* Males show a pronounced inverted U-curve with peak earnings around age 50 (~€20,000). Females have lower overall earnings and a flatter profile, peaking earlier around age 45 (~€15,000). The gap widens from about €3,000 at age 25 to €6,000-€7,000 at age 50-60, demonstrating cumulative career disadvantages for women.
+
+*Household Size × Gender:* Males maintain relatively stable income (€17,000-€18,000) regardless of household size, with slight decrease for very large households. Females show steeper decline from €15,000 (small households) to €12,000-€13,000 (large households), a ~€3,000 penalty. This interaction confirms that household responsibilities disproportionately impact women's earnings.
+
+**Model Comparison:** While interactions improve fit modestly, they reveal important heterogeneity: gender pay gaps grow with age and household size, and citizenship status modifies career progression patterns. These findings have important policy implications for understanding and addressing income inequalities in South Austria.
+
 # 5. Summary
-This analysis shows skewed income with outliers, gender and citizenship differences, nonlinear relationships with age and household size, and relevant interactions. Polynomial and spline regressions provide flexible modeling of numeric predictors, and residual diagnostics suggest the models are adequate.
+
+This analysis examined determinants of employment income in South Austria using data from Carinthia and Styria regions. Through progressive model building—from simple linear regression to complex interaction models with splines—we identified key patterns and relationships:
+
+**Key Findings:**
+
+1. **Income Distribution:** Income is right-skewed (median: €16,226; mean: €16,952) with substantial high-income outliers, reflecting typical income inequality patterns.
+
+2. **Gender Disparities:** A persistent and substantial gender pay gap of approximately €7,500-€7,700 (40-45%) exists across all models. This gap widens significantly with age, growing from ~€3,000 at age 25 to ~€6,000-€7,000 at age 50-60, indicating cumulative career disadvantages for women.
+
+3. **Citizenship Effects:** Individuals with non-EU citizenship earn €4,800-€5,200 less than Austrian citizens, while EU citizens show no significant difference. Non-EU citizens also display flatter age-income profiles, suggesting barriers to career advancement.
+
+4. **Age Patterns:** Income follows an inverted U-shaped trajectory, rising from early career to peak around ages 45-50, then declining toward retirement. This life-cycle pattern is better captured by polynomial and spline specifications than linear models.
+
+5. **Household Size:** Larger household size is associated with lower individual income (approximately -€400 per additional member in linear models). This effect is particularly pronounced for females, suggesting disproportionate career impacts of family responsibilities on women.
+
+6. **Important Interactions:** The interaction model reveals that effects are not uniform:
+   - The gender pay gap increases with both age and household size
+   - Age-income trajectories differ significantly by citizenship status
+   - Women face steeper income penalties for larger households than men
+
+**Model Performance:** Model fit improved progressively from linear (R² = 0.175) to polynomial (R² = 0.199) to spline (R² = 0.200) to interaction specifications (R² = 0.215). While these improvements are modest in percentage points, they capture substantively important nonlinear relationships and heterogeneous effects across groups.
+
+**Limitations:** The models explain only 17-22% of income variance, indicating substantial unexplained variation. Important factors not included in this analysis (education, occupation, work experience, industry, part-time vs. full-time status) likely account for much of the remaining variance. Additionally, the analysis is cross-sectional and cannot establish causal relationships—observed associations may reflect both causal effects and selection processes.
+
+**Policy Implications:** The findings highlight persistent income inequalities by gender and citizenship status in South Austria. The widening gender gap with age and household size suggests that policies addressing work-family balance, parental leave, childcare availability, and career re-entry programs may be particularly important. The citizenship-based disparities point to potential barriers in labor market integration for non-EU immigrants, warranting attention to credential recognition, language support, and anti-discrimination measures.
+
+**Future Directions:** Residual diagnostics (not shown here but recommended) should be conducted to validate model assumptions. Future analyses could incorporate additional predictors (education, occupation), explore regional differences between Carinthia and Styria, conduct separate models by gender to better understand within-group variations, and employ methods to address potential selection bias in labor force participation.
