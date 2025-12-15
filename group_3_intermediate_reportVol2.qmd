@@ -1,7 +1,7 @@
 ---
 title: "Regression Project – Group 3 (Intermediate Report)"
 author: "Reema Abolahum and Muzammil Mohammed"
-date: 14.12.2025
+date: 12.15.2025
 embed-resources: true
 toc: true
 format: 
@@ -44,6 +44,8 @@ suppressPackageStartupMessages({
   library(splines)
   library(car)
   library(corrplot)
+  library(ggeffects)
+  library(GGally)
 })
 
 # Define color palette
@@ -56,19 +58,47 @@ quaternary_color <- "#9B59B6"
 
 # 1. Introduction
 
-This report analyzes determinants of employment income (`py010n`) in South Austria.
-We focus on data preparation, descriptive statistics, and regression modeling using polynomial and spline methods.
-Interactions between predictors are explored, and diagnostic checks are performed to validate model assumptions.
+Employment income is a central indicator of economic well being, yet it is shaped by a complex interplay of demographic and social factors. In this report, we investigate how gender, citizenship, age, and household size influence income levels in South Austria, focusing specifically on the regions of Carinthia and Styria using the EU SILC panel dataset.
+
+Our analysis proceeds in three stage:
+
+
+•	Data preparation and descriptive statistics to identify distributions, outliers, and basic associations.
+
+
+•	Regression modeling using linear, polynomial, and spline specifications to capture both straightforward and nonlinear relationships.
+
+
+•	Interaction effects to explore how demographic variables combine to produce differentiated income outcomes.
+
+
+From a methodological perspective, we employ:
+
+
+•	Polynomial regression to model quadratic curvature in age and household size effects.
+
+
+•	Spline regression to flexibly capture turning points and plateaus in continuous predictors.
+
+
+•	Interaction terms to test whether the impact of one variable (e.g., age) depends on another (e.g., gender or citizenship).
+
+
+•	Diagnostic checks to validate model assumptions and ensure robustness.
+
+
+By combining descriptive visualization with advanced regression techniques, this report provides a nuanced view of income determinants in South Austria. The findings highlight both individual and joint effects of demographic factors, offering insights into inequality patterns and the importance of flexible modeling approaches.
 
 # 2. Data Collection and Preparation
 
 ```{r}
 data("eusilcP")
-
 dat <- eusilcP %>%
   select(py010n, gender, citizenship, hsize, age, region) %>%
   filter(region %in% c("Carinthia", "Styria")) %>%
   filter(py010n > 0)
+
+dat <- dat %>% rename(income = py010n)
 
 dat$hsize <- as.numeric(as.character(dat$hsize))
 dat <- na.omit(dat)
@@ -79,7 +109,7 @@ dat <- na.omit(dat)
 ## 3.1 Numeric Summaries
 
 ```{r}
-num_vars <- dat %>% select(py010n, age, hsize)
+num_vars <- dat %>% select(income, age, hsize)
 summary(num_vars)
 ```
 
@@ -95,12 +125,12 @@ table(dat$gender, dat$citizenship)
 
 ```{r}
 # Income
-ggplot(dat, aes(y=py010n)) + 
+ggplot(dat, aes(y=income)) + 
   geom_boxplot(fill=secondary_color, alpha=0.7, color=main_color) + 
   labs(title="Income Boxplot") +
   theme_minimal()
 
-ggplot(dat, aes(x=py010n)) + 
+ggplot(dat, aes(x=income)) + 
   geom_histogram(bins=50, fill=secondary_color, color=main_color, alpha=0.7) + 
   labs(title="Income Histogram") +
   theme_minimal()
@@ -173,7 +203,7 @@ This composition reflects Austria's demographic makeup with a predominantly nati
 
 ```{r bivariate-categorical, fig.height=5, fig.width=8, out.width='90%'}
 # Gender vs Income
-ggplot(dat, aes(x=gender, y=py010n, fill=gender)) + 
+ggplot(dat, aes(x=gender, y=income, fill=gender)) + 
   geom_boxplot(alpha=0.7) + 
   scale_fill_manual(values=c("female"="#E74C3C", "male"="#3498DB")) +
   labs(title="Income vs Gender") +
@@ -181,7 +211,7 @@ ggplot(dat, aes(x=gender, y=py010n, fill=gender)) +
   theme(legend.position="none")
 
 # Citizenship vs Income
-ggplot(dat, aes(x=citizenship, y=py010n, fill=citizenship)) +
+ggplot(dat, aes(x=citizenship, y=income, fill=citizenship)) +
   geom_boxplot(alpha=0.7) + 
   scale_fill_brewer(palette="Set2") +
   theme_minimal() +
@@ -199,14 +229,14 @@ This pattern may reflect employment barriers, language challenges, or credential
 
 ```{r bivariate-continuous, fig.height=5, fig.width=8, out.width='90%'}
 # Age vs Income (Polynomial)
-ggplot(dat, aes(x=age, y=py010n)) +
+ggplot(dat, aes(x=age, y=income)) +
   geom_point(alpha=0.3, color=main_color, size=1.5) + 
   geom_smooth(method="lm", formula=y~poly(x,2), color=tertiary_color, fill=tertiary_color, alpha=0.2, linewidth=1.2) +
   labs(title="Income vs Age (2nd-degree polynomial)") +
   theme_minimal()
 
 # Household size vs Income (Polynomial)
-ggplot(dat, aes(x=hsize, y=py010n)) +
+ggplot(dat, aes(x=hsize, y=income)) +
   geom_point(alpha=0.3, color=main_color, size=1.5) + 
   geom_smooth(method="lm", formula=y~poly(x,2), color=accent_color, fill=accent_color, alpha=0.2, linewidth=1.2) +
   labs(title="Income vs Household Size (2nd-degree polynomial)") +
@@ -227,7 +257,7 @@ The slight curvature suggests the decline is steeper for very large households.
 
 ```{r}
 # Gender × Citizenship
-ggplot(dat, aes(x=gender, y=py010n, fill=citizenship)) +
+ggplot(dat, aes(x=gender, y=income, fill=citizenship)) +
   geom_boxplot(position="dodge", alpha=0.7) + 
   scale_fill_brewer(palette="Set2") +
   labs(title="Income Interaction: Gender × Citizenship") +
@@ -242,7 +272,7 @@ This suggests that citizenship status and gender have independent negative effec
 
 ```{r}
 # Age × Gender
-ggplot(dat, aes(x=age, y=py010n, color=gender)) + 
+ggplot(dat, aes(x=age, y=income, color=gender)) + 
   geom_point(alpha=0.3, size=1.5) + 
   geom_smooth(method="lm", se=TRUE, alpha=0.2, linewidth=1.2) +
   scale_color_manual(values=c("female"="#E74C3C", "male"="#3498DB")) +
@@ -257,7 +287,7 @@ This pattern suggests cumulative disadvantages for women over their careers, pos
 
 ```{r}
 # Age × Citizenship
-ggplot(dat, aes(x=age, y=py010n, color=citizenship)) + 
+ggplot(dat, aes(x=age, y=income, color=citizenship)) + 
   geom_point(alpha=0.3, size=1.5) + 
   geom_smooth(method="lm", se=TRUE, alpha=0.2, linewidth=1.2) +
   scale_color_brewer(palette="Set2") +
@@ -273,7 +303,7 @@ This could indicate difficulties in credential recognition, discrimination, or c
 
 ```{r}
 # Household Size × Gender
-ggplot(dat, aes(x=hsize, y=py010n, color=gender)) + 
+ggplot(dat, aes(x=hsize, y=income, color=gender)) + 
   geom_point(alpha=0.3, size=1.5) + 
   geom_smooth(method="lm", se=TRUE, alpha=0.2, linewidth=1.2) +
   scale_color_manual(values=c("female"="#E74C3C", "male"="#3498DB")) +
@@ -289,7 +319,7 @@ This reflects traditional gender roles where women may reduce work hours or care
 
 ```{r}
 # Household Size × Citizenship
-ggplot(dat, aes(x=hsize, y=py010n, color=citizenship)) + 
+ggplot(dat, aes(x=hsize, y=income, color=citizenship)) + 
   geom_point(alpha=0.3, size=1.5) + 
   geom_smooth(method="lm", se=TRUE, alpha=0.2, linewidth=1.2) +
   scale_color_brewer(palette="Set2") +
@@ -304,6 +334,7 @@ EU citizens display high variability (wide confidence bands) due to small sample
 This suggests that household size impacts earnings regardless of citizenship, though the already-disadvantaged position of non-Austrian citizens compounds this effect.
 
 ## 3.6 Correlation / Scatterplot Matrix
+# Correlation matrix
 
 ```{r correlation-plots, fig.height=6, fig.width=10, out.width='95%'}
 par(mfrow=c(1,2))
@@ -313,13 +344,13 @@ corrplot(cor_mat, method="ellipse",
          col=colorRampPalette(c("#E74C3C", "white", "#3498DB"))(200),
          tl.col="black", tl.srt=45)
 
-pairs(num_vars, 
-      main="Scatterplot Matrix",
-      col=alpha(main_color, 0.4),
-      pch=19,
-      cex=0.8)
+# Scatterplot matrix (modern version)
 
-par(mfrow=c(1,1))
+ggpairs(num_vars,
+        title = "Scatterplot Matrix of Income, Age, Household Size",
+        upper = list(continuous = "cor"),
+        lower = list(continuous = "smooth"),
+        diag = list(continuous = wrap("barDiag", binwidth = 5)))
 ```
 
 **Interpretation:** The correlation matrix reveals weak to moderate relationships among the numeric variables.
@@ -338,10 +369,41 @@ Overall, these correlations suggest that while age and household size are statis
 ## 4.1 Linear Model
 
 ```{r}
-lm_model <- lm(py010n ~ gender + citizenship + hsize + age, data=dat)
+lm_model <- lm(income ~ gender + citizenship + hsize + age, data=dat)
 summary(lm_model)
 Anova(lm_model)
 plot(allEffects(lm_model))
+
+
+# Define linear model with renamed variable
+
+lm_model <- lm(income ~ gender + citizenship + hsize + age, data = dat)
+
+# Gender effect
+
+plot(Effect("gender", lm_model),
+     main = "Linear Effect: Gender")
+
+# Citizenship effect
+
+plot(Effect("citizenship", lm_model),
+     main = "Linear Effect: Citizenship")
+
+
+
+# Age effect (linear)
+
+plot(Effect("age", lm_model,
+     xlevels = list(age = seq(20, 80, by = 5))),
+     main = "Linear Effect: Age")
+
+
+
+# Household size effect (linear)
+
+plot(Effect("hsize", lm_model,
+        xlevels = list(hsize = 1:9)),
+        main = "Linear Effect: Household Size")
 ```
 
 **Interpretation:** The linear model explains 17.5% of income variance (R² = 0.175).
@@ -359,10 +421,47 @@ However, the linear age specification may not capture the inverted U-shape obser
 ## 4.2 Polynomial Model
 
 ```{r}
-poly_model <- lm(py010n ~ gender + citizenship + poly(age,2) + poly(hsize,2), data=dat)
-summary(poly_model)
-Anova(poly_model)
-plot(allEffects(poly_model))
+# Define polynomial model with renamed variable
+
+poly_model <- lm(income ~ poly(age, 2) + poly(hsize, 2) + gender + citizenship,
+
+                 data = dat)
+
+
+
+# Gender effect
+
+plot(Effect("gender", poly_model),
+
+     main = "Polynomial Effect: Gender", ylab = "Predicted Income (€)")
+
+
+
+# Citizenship effect
+
+plot(Effect("citizenship", poly_model),
+
+     main = "Polynomial Effect: Citizenship", ylab = "Predicted Income (€)")
+
+
+
+# Age effect (quadratic)
+
+plot(Effect("age", poly_model,
+
+            xlevels = list(age = seq(20, 80, by = 5))),
+
+     main = "Polynomial Effect: Age", ylab = "Predicted Income (€)")
+
+
+
+# Household size effect (quadratic)
+
+plot(Effect("hsize", poly_model,
+
+            xlevels = list(hsize = 1:9)),
+
+     main = "Polynomial Effect: Household Size", ylab = "Predicted Income (€)")
 ```
 
 **Interpretation:** The polynomial model improves fit to R² = 0.199 (vs. 0.175 for linear), capturing nonlinear relationships in age and household size.
@@ -383,10 +482,52 @@ This specification better captures life-cycle earnings patterns while maintainin
 ## 4.3 Spline Model
 
 ```{r}
-spline_model <- lm(py010n ~ gender + citizenship + ns(age, df=3) + ns(hsize, df=3), data=dat)
-summary(spline_model)
-Anova(spline_model)
-plot(allEffects(spline_model, xlevels=50))
+
+# Define spline model with renamed variable
+
+
+
+spline_model <- lm(income ~ ns(age, df = 4) + ns(hsize, df = 4) + gender + citizenship,
+
+                   data = dat)
+
+
+
+# Gender effect
+
+plot(Effect("gender", spline_model),
+
+     main = "Spline Effect: Gender", ylab = "Predicted Income (€)")
+
+
+
+# Citizenship effect
+
+plot(Effect("citizenship", spline_model),
+
+     main = "Spline Effect: Citizenship", ylab = "Predicted Income (€)")
+
+
+
+# Age effect (spline)
+
+plot(Effect("age", spline_model,
+
+            xlevels = list(age = seq(20, 80, by = 5))),
+
+     main = "Spline Effect: Age", ylab = "Predicted Income (€)")
+
+
+
+# Household size effect (spline)
+
+plot(Effect("hsize", spline_model,
+
+            xlevels = list(hsize = 1:9)),
+
+     main = "Spline Effect: Household Size", ylab = "Predicted Income (€)")
+
+
 ```
 
 **Interpretation:** The spline model (R² = 0.200) provides similar fit to the polynomial model but with greater flexibility through piecewise cubic polynomials.
@@ -404,23 +545,108 @@ The household size plot reveals more nuanced changes, with steeper decline for v
 The spline approach captures local variations the polynomial might miss, providing a more flexible representation of nonlinear effects.
 
 ## 4.4 Interaction Model
+# Define interaction model
 
 ```{r}
-int_model <- lm(py010n ~ (gender + citizenship + ns(age,3) + ns(hsize,3))^2, data=dat)
-summary(int_model)
-Anova(int_model)
-# plot(allEffects(int_model, xlevels=50))
-plot (
-allEffects (int_model, xlevels = 50),
-cex.Tab = 1.5,
-# enlarge axis Tabels
-cex.axis = 1.3,
-# enlarge tick labels
-cex.main = 1.5,
-# enlarge main title
-cex = 1.2
-)
+# Define interaction model with renamed variable
+
+
+
+int_model <- lm(income ~ (gender + citizenship + ns(age, 3) + ns(hsize, 3))^2,
+
+                data = dat)
+
+
+
+# Age × Household Size interaction using ggeffects
+
+eff_age_hsize <- ggpredict(int_model,
+
+                           terms = c("age [20:80 by=5]", "hsize [1:9]"))
+
+
+
+ggplot(eff_age_hsize, aes(x, predicted, color = group)) +
+
+  geom_line(size = 1) +
+
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = group),
+
+              alpha = 0.2, color = NA) +
+
+  labs(title = "Interaction: Age × Household Size",
+
+       x = "Age (years)", y = "Predicted Income (€)") +
+
+  theme_minimal() +
+
+  theme(legend.title = element_blank())
+
+
+
+
+
 ```
+
+
+
+## 4.5 Interaction Plots
+
+
+
+```{r}
+
+# 4.5 Interaction Plots using effects 
+
+
+
+int_model <- lm(income ~ (gender + citizenship + ns(age, 3) + ns(hsize, 3))^2,
+
+                data = dat)
+
+
+
+# Interaction plots
+
+plot(Effect(c("gender", "citizenship"), int_model),
+
+     main = "Interaction: Gender × Citizenship", ylab = "Predicted Income (€)")
+
+
+
+plot(Effect(c("gender", "age"), int_model,
+
+            xlevels = list(age = seq(20, 80, by = 5))),
+
+     main = "Interaction: Gender × Age", ylab = "Predicted Income (€)")
+
+
+
+plot(Effect(c("gender", "hsize"), int_model,
+
+            xlevels = list(hsize = 1:9)),
+
+     main = "Interaction: Gender × Household Size", ylab = "Predicted Income (€)")
+
+
+
+plot(Effect(c("citizenship", "age"), int_model,
+
+            xlevels = list(age = seq(20, 80, by = 5))),
+
+     main = "Interaction: Citizenship × Age", ylab = "Predicted Income (€)")
+
+
+
+plot(Effect(c("citizenship", "hsize"), int_model,
+
+            xlevels = list(hsize = 1:9)),
+
+     main = "Interaction: Citizenship × Household Size", ylab = "Predicted Income (€)")
+```
+
+**5. Summary:**
+Income in South Austria is highly skewed, with clear differences by gender and citizenship. Age and household size show nonlinear effects, best captured by polynomial and spline models. Interaction analyses reveal that demographic factors combine in complex ways to shape income outcomes. Overall, flexible regression approaches provide a more accurate picture than simple linear models, and diagnostics confirm model adequacy
 
 **Interpretation:** The interaction model (R² = 0.215) provides the best fit, adding 1.5 percentage points over the spline model by allowing predictor effects to vary across groups.
 The model includes all two-way interactions between gender, citizenship, age splines, and household size splines.
